@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Vcl.StdCtrls;
+  Dialogs, StdCtrls;
 
 type
   TForm1 = class(TForm)
@@ -22,24 +22,61 @@ var
 implementation
 
 uses
-  ArrayAssoc;
+  ArrayAssoc, ArrayAssocClass;
 
 {$R *.dfm}
 
 procedure TForm1.btnArrayClick(Sender: TObject);
 var
   ArrayAssocBi: TArrayAssocBi;
-  Verify: Boolean;
+  VArrayAssoc: IArray;
 begin
-  ArrayAssocBi['String']['Teste'] := 'outro teste';
-  ArrayAssocBi['String']['Teste2'] := 'STr6';
-  ArrayAssocBi['String 2']['teste3'] := 'Str5';
-  ArrayAssocBi['String 2']['teste4'] := 'Str4';
-  ArrayAssocBi['String 4']['teste4'] := 'Str4';
+  VArrayAssoc := TArrayAssocClass.Create(
+                                         [
+                                          'Teste1',
+                                          'Teste2',
+                                          'Teste3'
+                                         ],
+                                         [
+                                          TArrayAssocClass.Create(['Teste1', 'Teste2'], [TArrayAssocProperty.Create('key1', 55), TArrayAssocProperty.Create('key1', 100)]),
+                                          TArrayAssocClass.Create(['Teste2'], [TArrayAssocClass.Create(['Teste3'], [TArrayAssocClass.Create(['Teste4'], [TArrayAssocProperty.Create('key1', 55)])])]),
+                                          TArrayAssocClass.Create(['Teste2'], [TArrayAssocProperty.Create('key3', 95)])
+                                         ]
+                                        );
 
-  Showmessage(ArrayAssocBi['String']['Teste']);
-  Showmessage(ArrayAssocBi['String 2']['teste3']);
+  showmessage(IntTOStr(VArrayAssoc['Teste1']['Teste1'].Value));
+  showmessage(IntTOStr(VArrayAssoc['Teste1']['Teste2'].Value));
+  showmessage(IntTOStr(VArrayAssoc['Teste2']['Teste2']['Teste3']['Teste4'].Value));
+  showmessage(IntTOStr(VArrayAssoc['Teste3']['Teste2'].Value));
+
+
+
+
+
+
+
+
+
+
+  //TESTE TARRAYASSOCBI
+  ArrayAssocBi['Item1']['Teste'] := 'Primeira1';
+  ArrayAssocBi['Item2']['Teste2'] := 'PrimeiraT3';
+  ArrayAssocBi['String 2']['teste3'] := 'Segunda4';
+  ArrayAssocBi['String 2']['teste4'] := 'SegundaTC6';
+  ArrayAssocBi['String 4']['teste4'] := 'Terceira7';
+  ArrayAssocBi['Item5']['Teste5'] := 'Terceira8';
+
+  
+  ArrayAssocBi['Item1']['Teste'] := 'Segunda2';   
+  ArrayAssocBi['String 2']['teste3'] := 'SegundaT5';
+
+  Showmessage(ArrayAssocBi['Item1']['Teste']);
+  Showmessage(ArrayAssocBi['Item1']['Teste']);
+  Showmessage(ArrayAssocBi['Item2']['Teste2']);  
+  Showmessage(ArrayAssocBi['String 2']['teste3']); 
+  ShowMessage(ArrayAssocBi['String 2']['teste4']);
   Showmessage(ArrayAssocBi['String 4']['teste4']);
+  Showmessage(ArrayAssocBi['Item5']['Teste5']);
 end;
 
 end.

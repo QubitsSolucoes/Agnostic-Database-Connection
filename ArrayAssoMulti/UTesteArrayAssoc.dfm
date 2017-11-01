@@ -16,7 +16,7 @@ object Form1: TForm1
   object btnArray: TButton
     Left = 32
     Top = 40
-    Width = 75
+    Width = 121
     Height = 25
     Caption = 'Array'
     TabOrder = 0
