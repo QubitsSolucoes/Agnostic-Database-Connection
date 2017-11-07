@@ -4,7 +4,8 @@ uses
   Forms,
   UTesteArrayAssoc in 'UTesteArrayAssoc.pas' {Form1},
   ArrayAssoc in 'ArrayAssoc.pas',
-  ArrayAssocClass in 'ArrayAssocClass.pas';
+  ArrayAssocClass in 'ArrayAssocClass.pas',
+  VariantUtils in 'VariantUtils.pas';
 
 {$R *.res}
 

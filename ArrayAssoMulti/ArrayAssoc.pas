@@ -3,7 +3,7 @@
 interface
 
 uses
-  Classes, SysUtils, RTLConsts;
+  Classes, SysUtils, RTLConsts, VariantUtils;
 
 type
 
@@ -11,31 +11,31 @@ type
   private
     FOwner: Array of String;
     FKeyItems: Array of String;
-    FItems: Array of String;
-    procedure Edit(Key: Integer; KeyName, Value: string);
-    function GetValues(Index: string): string;
-    function GetValuesAtIndex(Index: Integer): String;
-    procedure SetValues(Index: string; const Value: String);
+    FItems: Array of TVariant;
+    procedure Edit(Key: Integer; KeyName: String; Value: TVariant);
+    function GetValues(Index: string): TVariant;
+    function GetValuesAtIndex(Index: Integer): TVariant;
+    procedure SetValues(Index: string; const Value: TVariant);
     function GetIsEmpty: Boolean;
-    function ValueExists(Index: string; const Value: String): boolean;   
+    function ValueExists(Index: string; const Value: TVariant): boolean;
     function GetCount: Integer;
-    function GetFirst: String;
-    procedure SetFirst(const Value: String);
-    function GetLast: String;
-    procedure SetLast(const Value: String);
+    function GetFirst: TVariant;
+    procedure SetFirst(const Value: TVariant);
+    function GetLast: TVariant;
+    procedure SetLast(const Value: TVariant);
     function IndexOf(Const FIndex: String): Integer;
     procedure Remove(const AKey: String); overload;
     procedure Remove(const AIndex: integer); overload;
   public
-    class function Initialize(AOwner, AKeyItems, AItems: Array of String): TArrayAssoc; overload; static;
+    class function Initialize(AOwner, AKeyItems: Array of String; AItems: Array of TVariant): TArrayAssoc; overload; static;
     class function Initialize(AArrayAssoc: TArrayAssoc): TArrayAssoc; overload; static;
-    property Last: String read GetLast write SetLast;
-    property First: String read GetFirst write SetFirst;
+    property Last: TVariant read GetLast write SetLast;
+    property First: TVariant read GetFirst write SetFirst;
     property Count: Integer read GetCount;
     property IsEmpty: Boolean read GetIsEmpty;
-    procedure Add(Key, Value: string);
-    property ItemsAtIndex[Index: Integer]: String read GetValuesAtIndex;
-    property Items[Index: string]: String read GetValues write SetValues; default;
+    procedure Add(Key: String; Value: TVariant);
+    property ItemsAtIndex[Index: Integer]: TVariant read GetValuesAtIndex;
+    property Items[Index: string]: TVariant read GetValues write SetValues; default;
   end;
 
   TArrayAssocBi = record
@@ -45,13 +45,11 @@ type
     function GetValues(Index: string): TArrayAssoc;
     function GetValuesAtIndex(Index: Integer): TArrayAssoc;
     procedure SetValues(Index: string; const Value: TArrayAssoc);
-    function CopyValue(AValue: TArrayAssoc): TArrayAssoc;
     function GetCount: Integer;
     function GetFirst: TArrayAssoc;
     procedure SetFirst(const Value: TArrayAssoc);
     function GetLast: TArrayAssoc;
     procedure SetLast(const Value: TArrayAssoc);
-    procedure AddItems(Key: string; Value: TArrayAssoc);
     function ValueOwnerExists(Owner: string): boolean;
     function IndexOf(FIndex: String): Integer;
     procedure Edit(Key: String; Value: TArrayAssoc);
@@ -68,15 +66,15 @@ implementation
 
 uses
   Dialogs;
-  
+
 { TArrayAssoc }
 
-function TArrayAssoc.ValueExists(Index: string; const Value: String): boolean;
+function TArrayAssoc.ValueExists(Index: string; const Value: TVariant): boolean;
 begin
   Result := IndexOf(Index) > -1;
 end;
 
-procedure TArrayAssoc.Add(Key, Value: string);
+procedure TArrayAssoc.Add(Key: String; Value: TVariant);
 var
   I: Integer;
 begin
@@ -88,7 +86,7 @@ begin
   FItems[I] := Value;
 end;
 
-procedure TArrayAssoc.Edit(Key: Integer; KeyName, Value: string);
+procedure TArrayAssoc.Edit(Key: Integer; KeyName: String; Value: TVariant);
 begin
   FKeyItems[Key] := KeyName;
   FItems[Key] := Value;
@@ -104,17 +102,17 @@ begin
   Result := I > -1;
 end;
 
-function TArrayAssoc.GetFirst: String;
+function TArrayAssoc.GetFirst: TVariant;
 begin
   Result := FItems[0];
 end;
 
-function TArrayAssoc.GetLast: String;
-begin   
+function TArrayAssoc.GetLast: TVariant;
+begin
   Result := FItems[High(FItems)];
-end;     
+end;
 
-procedure TArrayAssoc.SetFirst(const Value: String);
+procedure TArrayAssoc.SetFirst(const Value: TVariant);
 begin
   if Count > 0 then
     FItems[0] := Value
@@ -122,7 +120,7 @@ begin
     raise Exception.Create('Não foi possível atribuir um valor a uma posição inexistente do array');
 end;
 
-procedure TArrayAssoc.SetLast(const Value: String);
+procedure TArrayAssoc.SetLast(const Value: TVariant);
 begin
   if Count > 0 then
     FItems[High(FItems)] := Value
@@ -135,7 +133,7 @@ begin
   Result := Length(FItems);
 end;
 
-function TArrayAssoc.GetValues(Index: string): string;
+function TArrayAssoc.GetValues(Index: string): TVariant;
 var
   VIndex: Integer;
 begin
@@ -144,12 +142,12 @@ begin
     Result := FItems[VIndex]
 end;
 
-function TArrayAssoc.GetValuesAtIndex(Index: Integer): string;
+function TArrayAssoc.GetValuesAtIndex(Index: Integer): TVariant;
 begin
   Result := FItems[Index];
 end;
 
-procedure TArrayAssoc.SetValues(Index: string; const Value: string);
+procedure TArrayAssoc.SetValues(Index: string; const Value: TVariant);
 var
   VIndex: Integer;
 begin
@@ -175,17 +173,17 @@ begin
   end;
 end;
 
-class function TArrayAssoc.Initialize(AOwner, AKeyItems,
-  AItems: array of String): TArrayAssoc;
+class function TArrayAssoc.Initialize(AOwner, AKeyItems: Array of String;
+  AItems: array of TVariant): TArrayAssoc;
 var
   I: Integer;
-begin                        
+begin
   I := Length(AOwner);
   SetLength(Result.FOwner, I);
   I := Length(AKeyItems);
   SetLength(Result.FKeyItems, I);
   I := Length(AItems);
-  SetLength(Result.FItems, I);     
+  SetLength(Result.FItems, I);
   for I := 0 to High(AItems) do
   begin
     Result.FOwner[i] := AOwner[i];
@@ -210,38 +208,19 @@ end;
 class function TArrayAssoc.Initialize(AArrayAssoc: TArrayAssoc): TArrayAssoc;
 var
   I: Integer;
-begin                        
+begin
   I := Length(AArrayAssoc.FOwner);
   SetLength(Result.FOwner, I);
   I := Length(AArrayAssoc.FKeyItems);
   SetLength(Result.FKeyItems, I);
   I := Length(AArrayAssoc.FItems);
-  SetLength(Result.FItems, I);     
+  SetLength(Result.FItems, I);
   for I := 0 to High(AArrayAssoc.FItems) do
   begin
     Result.FOwner[i] := AArrayAssoc.FOwner[i];
     Result.FKeyItems[i] := AArrayAssoc.FKeyItems[i];
     Result.FItems[i] := AArrayAssoc.FItems[i];
   end;
-end;
-
-procedure TArrayAssoc.Remove(const AKey: String);
-var
-   APosicao, Total, j : integer;
-begin
-  APosicao := IndexOf(AKey);
-  Total := Length(FItems);
-  if Total <= APosicao then
-    exit;
-  for j := APosicao to Total - 2 do
-    FOwner[j] := FOwner[j + 1];
-  SetLength(FOwner, Total - 1);
-  for j := APosicao to Total - 2 do
-    FKeyItems[j] := FKeyItems[j + 1];
-  SetLength(FKeyItems, Total - 1);
-  for j := APosicao to Total - 2 do
-    FItems[j] := FItems[j + 1];
-  SetLength(FItems, Total - 1);
 end;
 
 procedure TArrayAssoc.Remove(const AIndex: integer);
@@ -262,26 +241,15 @@ begin
   SetLength(FItems, Total - 1);
 end;
 
-{ TArrayAssocBi }
-
-function TArrayAssocBi.CopyValue(AValue: TArrayAssoc): TArrayAssoc;
+procedure TArrayAssoc.Remove(const AKey: String);
 var
-  I, J: Integer;
+   APosicao: integer;
 begin
-  J := Length(AValue.FOwner);
-  SetLength(Result.FOwner, J);
-  J := Length(AValue.FKeyItems);
-  SetLength(Result.FKeyItems, J);
-  J := Length(AValue.FItems);
-  SetLength(Result.FItems, J);
+  APosicao := IndexOf(AKey);
+  Remove(APosicao);
+end;
 
-  for I := 0 to High(AValue.FItems) do
-  begin
-    Result.FOwner[i] := AValue.FOwner[i];
-    Result.FKeyItems[i] := AValue.FKeyItems[i];
-    Result.FItems[i] := AValue.FItems[i];
-  end;
-end;    
+{ TArrayAssocBi }
 
 function TArrayAssocBi.GetFirst: TArrayAssoc;
 begin
@@ -289,9 +257,9 @@ begin
 end;
 
 function TArrayAssocBi.GetLast: TArrayAssoc;
-begin   
+begin
   Result := FItems[High(FItems)];
-end;     
+end;
 
 procedure TArrayAssocBi.SetFirst(const Value: TArrayAssoc);
 begin
@@ -312,25 +280,6 @@ end;
 function TArrayAssocBi.GetCount: Integer;
 begin
   Result := Length(FItems);
-end; 
-
-procedure TArrayAssocBi.AddItems(Key: string; Value: TArrayAssoc);
-var
-  J: Integer;
-begin
-  //Setar valores do array de ArrayAssoc
-  with Value do
-  begin
-    J := Length(FOwner);
-    SetLength(FOwner, Length(FOwner)+ 1);
-    FOwner[J] := Key;
-    J := Length(FKeyItems);
-    SetLength(FKeyItems, Length(FKeyItems) + 1);
-    FKeyItems[J] := '';
-    J := Length(FItems);
-    SetLength(FItems, Length(FItems) + 1);
-    FItems[J] := '';
-  end;
 end;
 
 function TArrayAssocBi.ValueOwnerExists(Owner: string): boolean;

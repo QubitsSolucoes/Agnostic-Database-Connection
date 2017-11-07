@@ -3,37 +3,37 @@ unit ArrayAssocClass;
 interface
 
 uses
-  Classes, SysUtils, Variants;
+  Classes, SysUtils, DateUtils, VariantUtils, Variants;
 
 type
 
   IArray = interface
   ['{E781B510-8FD6-49E6-A1BE-B2BDF4074898}']
-    function GetItem: Variant;
-    procedure SetItem(AItem: Variant);
+    function GetItem: TVariant;
+    procedure SetItem(AItem: TVariant);
     function GetValues(Index: string): IArray;
     procedure SetValues(Index: string; const Value: IArray);
     function GetItemIsEmpty: Boolean;
     property IsEmpty: Boolean read GetItemIsEmpty;
-    property Value: Variant read GetItem write SetItem;
+    property Value: TVariant read GetItem write SetItem;
     property Items[Index: string]: IArray read GetValues write SetValues; default;
   end;
 
   TArrayAssocProperty = class(TInterfacedObject, IArray)
   private
     FKey: String;
-    FItem: Variant;
-    function GetItem: Variant;
-    procedure SetItem(AItem: Variant);
+    FItem: TVariant;
+    function GetItem: TVariant;
+    procedure SetItem(AItem: TVariant);
     function GetValues(Index: string): IArray;
     procedure SetValues(Index: string; const Value: IArray);
-    function GetItemIsEmpty: Boolean;       
+    function GetItemIsEmpty: Boolean;
     property IsEmpty: Boolean read GetItemIsEmpty;
     property Items[Index: string]: IArray read GetValues write SetValues; default;
   public
-    constructor Create(AKey: String; AItem: Variant);
+    constructor Create(AKey: String; AItem: TVariant);
     property Key: String read FKey write FKey;
-    property Value: Variant read GetItem write SetItem;
+    property Value: TVariant read GetItem write SetItem;
   end;
 
   TArrayAssocClass = class(TInterfacedObject, IArray)
@@ -48,10 +48,10 @@ type
     function GetValuesAtIndex(Index: Integer): IArray;
     function ValueExists(Index: string; const Value: IArray): boolean;
     function KeyExists(Index: String): boolean;   
-    function GetItem: Variant;
-    procedure SetItem(AItem: Variant);
+    function GetItem: TVariant;
+    procedure SetItem(AItem: TVariant);
     function IndexOf(AIndex: String): Integer;        
-    property Value: Variant read GetItem write SetItem;
+    property Value: TVariant read GetItem write SetItem;
   public
     constructor Create(Index: Array of String; FArrayAssoc: Array of IArray);
     procedure Add(Key: String; Value: IArray);
@@ -64,9 +64,9 @@ implementation
 
 { TArrayAssocClass }
 
-function TArrayAssocClass.GetItem: Variant;
+function TArrayAssocClass.GetItem: TVariant;
 begin
-  
+
 end;
 
 function TArrayAssocClass.GetItemIsEmpty: Boolean;
@@ -125,8 +125,12 @@ var
   VIndex: Integer;
 begin
   VIndex := IndexOf(Index);
-  if Assigned(FItems[VIndex]) then
-    Result := FItems[VIndex];
+  try
+    if Assigned(FItems[VIndex]) then
+      Result := FItems[VIndex];
+  except
+    raise EAccessViolation.CreateFmt('Index not defined! Verify index (%s)!', [Index]);
+  end;
 end;
 
 function TArrayAssocClass.GetValuesAtIndex(Index: Integer): IArray;
@@ -147,7 +151,7 @@ begin
     end;
 end;
 
-procedure TArrayAssocClass.SetItem(AItem: Variant);
+procedure TArrayAssocClass.SetItem(AItem: TVariant);
 begin
 
 end;
@@ -176,13 +180,13 @@ end;
 
 { TArrayAssocProperty }
 
-constructor TArrayAssocProperty.Create(AKey: String; AItem: Variant);
+constructor TArrayAssocProperty.Create(AKey: String; AItem: TVariant);
 begin
   FKey := AKey;
   FItem := AItem;
 end;
 
-function TArrayAssocProperty.GetItem: Variant;
+function TArrayAssocProperty.GetItem: TVariant;
 begin
   Result := FItem;
 end;
@@ -194,17 +198,18 @@ end;
 
 function TArrayAssocProperty.GetValues(Index: string): IArray;
 begin
-  Result := nil;
+  Result := Self;
 end;
 
-procedure TArrayAssocProperty.SetItem(AItem: Variant);
+procedure TArrayAssocProperty.SetItem(AItem: TVariant);
 begin
   FItem := AItem;
 end;
 
 procedure TArrayAssocProperty.SetValues(Index: string; const Value: IArray);
 begin
-
+  FKey := Index;
+  TArrayAssocProperty(Value).FItem := FItem;
 end;
 
 end.
